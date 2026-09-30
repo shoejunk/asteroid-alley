@@ -23,7 +23,11 @@
   function resume(){if(state!=='paused')return;state='playing';last=performance.now();$('overlay').classList.add('hidden');$('pause').textContent='Ⅱ';$('pause').setAttribute('aria-label','Pause game');}
   function end(){state='over';pointer=null;keys.clear();burst(ship.x,ship.y,'#b5fc6c',35);beep(110,.35,'sawtooth');if(score>best){best=Math.floor(score);try{localStorage.setItem('asteroid-alley-best',String(best));}catch{}$('best').textContent=format(best);}$('pause').disabled=true;overlay('over');}
   $('start').onclick=()=>state==='paused'?resume():start();$('pause').onclick=()=>state==='playing'?pause():resume();
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});window.addEventListener('blur',pause);
+  // Focus can change while a mobile page is still visible and being touched.
+  // Only a genuine lifecycle transition should interrupt an active flight.
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
+  window.addEventListener('pagehide',pause);
+  window.addEventListener('blur',()=>{keys.clear();});
   window.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' ','Escape','a','d','w','s'].includes(e.key)){e.preventDefault();if(e.key==='Escape'||e.key===' '){if(e.repeat)return;state==='playing'?pause():state==='paused'?resume():start();}else keys.add(e.key);}});window.addEventListener('keyup',e=>keys.delete(e.key));
   function point(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height};}
   canvas.addEventListener('pointerdown',e=>{if(state!=='playing'||pointer)return;canvas.setPointerCapture(e.pointerId);const p=point(e);pointer={id:e.pointerId,x:p.x,y:p.y};});
